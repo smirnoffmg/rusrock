@@ -1,0 +1,65 @@
+[project]
+name = "rusrock"
+version = "0.1.0"
+description = "Corpus of Russian rock lyrics: frequency dictionaries, keyness, authorship attribution"
+requires-python = ">=3.12"
+dependencies = [
+    "requests>=2.32",
+    "beautifulsoup4>=4.12",
+    "natasha>=1.6.0",
+    "pymorphy3>=2.0.6",
+    # natasha needs pymorphy2, which imports pkg_resources (dropped in setuptools 81).
+    "setuptools<81",
+    "scikit-learn>=1.9.1",
+    "numpy>=2.5.3",
+    "seaborn>=0.13.2",
+    "matplotlib>=3.11.2",
+]
+
+[project.scripts]
+rusrock-scrape = "rusrock.cli:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "ruff>=0.6",
+    "mypy>=1.11",
+    "types-requests",
+    "pandas-stubs>=3.0.5.260914",
+    "types-seaborn>=0.13.2.20260728",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/rusrock"]
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM", "RET", "C4"]
+
+[tool.mypy]
+strict = true
+files = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+# Test fixtures reproduce the sites' one-line HTML verbatim.
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["E501"]
+
+# natasha and pymorphy3 ship no type information.
+[[tool.mypy.overrides]]
+module = ["natasha", "natasha.*", "pymorphy3", "pymorphy3.*"]
+ignore_missing_imports = true
+
+# scikit-learn ships no type information.
+[[tool.mypy.overrides]]
+module = ["sklearn", "sklearn.*"]
+ignore_missing_imports = true

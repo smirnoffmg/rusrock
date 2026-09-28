@@ -1,0 +1,7 @@
+# Song lyrics are copyrighted: raw pages and extracted texts stay local only.
+data/
+.venv/
+__pycache__/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/

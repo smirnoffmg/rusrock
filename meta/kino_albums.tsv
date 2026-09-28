@@ -1,0 +1,22 @@
+# Страница дискографии kinoshnik.narod.ru/<page>.htm → альбом, год, тип. Названия, годы (год издания) и типы — по разделу «Дискография» статьи https://ru.wikipedia.org/wiki/Кино_(группа) (27.09.2026).
+# kind: studio, live, compilation, other. Пустой год — релиз на сайте не удалось однозначно сопоставить с Википедией.
+# «Последний герой» (1989) в Википедии — перезаписи/сборник, поэтому compilation. У «45» и «46» на сайте нет треклиста.
+page	album	year	kind
+kinodisk1	45	1982	studio
+kinodisk2	46	1983	studio
+kinodisk3	Начальник Камчатки	1984	studio
+kinodisk4	Это не любовь	1985	studio
+kinodisk5	Ночь	1986	studio
+kinodisk6	Группа крови	1988	studio
+kinodisk7	Последний герой	1989	compilation
+kinodisk8	Звезда по имени Солнце	1989	studio
+kinodisk9	Чёрный альбом	1991	studio
+kinodisk10	Акустический концерт	1996	live
+kinodisk11	Неизвестные песни	1992	compilation
+kinodisk12	Концерт в рок-клубе	1996	live
+kinodisk13	Песни под гитару	1999	live
+kinodisk14	Майк Науменко и Виктор Цой 1		live
+kinodisk15	Лучшие песни		compilation
+kinodisk16	Майк Науменко и Виктор Цой 2		live
+kinodisk17	Лучшие песни 82—88	1999	compilation
+kinodisk18	Лучшие песни 88—90	1999	compilation

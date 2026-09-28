@@ -83,3 +83,7 @@ def test_line_initial_capital_is_lowered_unless_proper_name(
 
 def test_latin_n_inside_rock_n_roll_becomes_cyrillic() -> None:
     assert clean_text("играй рок-n-ролл") == "играй рок-н-ролл"
+
+
+def test_known_dictionary_errors_are_corrected(analyzer: pymorphy3.MorphAnalyzer) -> None:
+    assert combine_lemma("далью", "далья", "NOUN", analyzer.parse("далью")) == "даль"

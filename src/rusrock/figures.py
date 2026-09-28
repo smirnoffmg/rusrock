@@ -29,6 +29,9 @@ SHORT = {
     "Янка Дягилева": "Янка Дягилева",
     "Александр Башлачёв": "Башлачёв",
     "Эдмунд Шклярский": "Шклярский",
+    "Андрей Лысиков": "Дельфин",
+    "Александр Васильев": "Васильев",
+    "Дмитрий Озерский": "Озерский",
 }
 RICH = {"Янка Дягилева", "Александр Башлачёв", "Юрий Шевчук", "Егор Летов"}
 MODEL_NAMES = {
@@ -97,7 +100,7 @@ def richness() -> None:
     values = table.set_index(table["author"].map(SHORT))["ttr_lemma_mean"]
     errors = table["ttr_lemma_std"].to_numpy()
     colors = [BLUE if a in RICH else ORANGE for a in table["author"]]
-    fig, ax = plt.subplots(figsize=(7, 4.2))
+    fig, ax = plt.subplots(figsize=(7, 5.2))
     dot_chart(ax, values, pd.Series(errors, index=values.index), colors)
     ax.set_xlim(0, 0.45)
     ax.set_xlabel("доля разных лемм на выборке в 5 000 слов (среднее ± ст. откл., 100 выборок)")
@@ -112,8 +115,10 @@ def richness() -> None:
 def keyness() -> None:
     skip = function_lemmas()
     authors = list(SHORT)
-    fig, axes = plt.subplots(2, 5, figsize=(15, 6.5), sharex=True)
-    for ax, author in zip(axes.flat, authors, strict=True):
+    fig, axes = plt.subplots(3, 5, figsize=(15, 9.5), sharex=True)
+    for ax in axes.flat[len(authors) :]:
+        ax.set_visible(False)
+    for ax, author in zip(axes.flat, authors, strict=False):
         table = read_tsv(DATA / "keyness" / f"{author}.tsv")
         table = table[(table["df"] >= 3) & ~table["lemma"].isin(skip)].head(8)
         # Mike's «сладкая N» and «город N» survive lowercasing as «n».
@@ -121,10 +126,14 @@ def keyness() -> None:
         dot_chart(ax, values, None, [BLUE] * len(values))
         ax.set_title(SHORT[author], loc="left", color=INK, fontsize=12)
         ax.tick_params(axis="y", labelsize=10)
-    for ax in axes[1]:
-        ax.set_xlabel("z-оценка log-odds")
+    rows, cols = axes.shape
+    for i, ax in enumerate(axes.flat):
+        below = i + cols
+        if ax.get_visible() and (below >= rows * cols or not axes.flat[below].get_visible()):
+            ax.set_xlabel("z-оценка log-odds")
+            ax.tick_params(labelbottom=True)
     fig.suptitle(
-        "Характерные слова: чем автор отличается от остальных девяти",
+        "Характерные слова: чем автор отличается от остальных",
         x=0.01,
         ha="left",
         color=INK,
@@ -177,7 +186,7 @@ def confusion() -> None:
     shares = table.div(table.sum(axis=1), axis=0) * 100
     shares.index = [SHORT[a] for a in order]
     shares.columns = [SHORT[a] for a in order]
-    fig, ax = plt.subplots(figsize=(8.5, 7))
+    fig, ax = plt.subplots(figsize=(10.5, 8.5))
     sns.heatmap(
         shares,
         cmap=sns.light_palette(BLUE, as_cmap=True),

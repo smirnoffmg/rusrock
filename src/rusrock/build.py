@@ -94,6 +94,9 @@ ARTISTS = (
     Artist("yanka", "Янка Дягилева", "Дягилева", False),
     Artist("bashlachev", "Александр Башлачёв", "Башлачёв", True),
     Artist("piknik", "Эдмунд Шклярский", "Шклярский", True),
+    Artist("delfin", "Андрей Лысиков", "Лысиков", True, frozenset({"audioplay"})),
+    Artist("splin", "Александр Васильев", "Васильев", True),
+    Artist("auktyon", "Дмитрий Озерский", "Озерский", True),
 )
 
 KIND_RANK = {"studio": 0, "solo": 1, "single": 2, "live": 3, "compilation": 4, "other": 5}

@@ -65,6 +65,8 @@ def lower_line_initials(text: str, analyzer: Any) -> str:
 
 
 POSSESSIVES = {"его": "он", "ее": "она", "их": "они"}
+# Both lemmatizers get these wrong regardless of context (checked on the corpus).
+LEMMA_FIXES = {"далья": "даль"}
 PYMORPHY_WINS = {"ADVB", "PRED", "COMP"}
 
 
@@ -76,6 +78,11 @@ def _participle_lemma(parse: Any) -> str | None:
 
 def combine_lemma(form: str, natasha_lemma: str, natasha_pos: str, parses: list[Any]) -> str:
     """Natasha's contextual lemma, corrected by the conventions agreed in the lemma review."""
+    lemma = _combine(form, natasha_lemma, natasha_pos, parses)
+    return LEMMA_FIXES.get(lemma, lemma)
+
+
+def _combine(form: str, natasha_lemma: str, natasha_pos: str, parses: list[Any]) -> str:
     natasha_lemma = normalize_lemma(natasha_lemma)
     if natasha_lemma in POSSESSIVES and natasha_pos in ("DET", "PRON"):
         return POSSESSIVES[natasha_lemma]

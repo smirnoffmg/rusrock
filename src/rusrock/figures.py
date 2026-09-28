@@ -205,6 +205,49 @@ def confusion() -> None:
     plt.close(fig)
 
 
+def chronology() -> None:
+    path = DATA / "chronology" / "religious.tsv"
+    if not path.exists():
+        return
+    table = read_tsv(path)
+    table = table[table["lexicon"] == "христианская"]
+    fig, ax = plt.subplots(figsize=(7.5, 4.2))
+    for author, color, shift in (
+        ("Борис Гребенщиков", BLUE, -0.08),
+        ("Константин Кинчев", ORANGE, 0.08),
+    ):
+        rows = table[table["author"] == author].sort_values("decade")
+        x = [int(d[:4]) / 10 + shift for d in rows["decade"]]
+        ax.plot(x, rows["per_1000"], color=color, linewidth=2, zorder=2)
+        ax.errorbar(
+            x,
+            rows["per_1000"],
+            yerr=[rows["per_1000"] - rows["low"], rows["high"] - rows["per_1000"]],
+            fmt="none",
+            ecolor=color,
+            elinewidth=1.5,
+            alpha=0.6,
+            zorder=1,
+        )
+        ax.scatter(
+            x,
+            rows["per_1000"],
+            c=color,
+            s=70,
+            zorder=3,
+            edgecolors=SURFACE,
+            linewidths=2,
+            label=SHORT[author],
+        )
+    ax.set_xticks(range(197, 203), [f"{d}0-е" for d in range(197, 203)])
+    ax.set_ylim(0, None)
+    ax.set_ylabel("слов на 1 000 (95% интервал, бутстреп)")
+    ax.set_title("Христианская лексика по десятилетиям", loc="left", color=INK, fontsize=13)
+    ax.legend(frameon=False, loc="upper left")
+    fig.savefig(OUT / "chronology.png")
+    plt.close(fig)
+
+
 def main() -> None:
     OUT.mkdir(exist_ok=True)
     setup()
@@ -213,6 +256,7 @@ def main() -> None:
     models()
     authors_f1()
     confusion()
+    chronology()
 
 
 if __name__ == "__main__":

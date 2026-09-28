@@ -87,3 +87,23 @@ def test_latin_n_inside_rock_n_roll_becomes_cyrillic() -> None:
 
 def test_known_dictionary_errors_are_corrected(analyzer: pymorphy3.MorphAnalyzer) -> None:
     assert combine_lemma("далью", "далья", "NOUN", analyzer.parse("далью")) == "даль"
+
+
+@pytest.mark.parametrize(
+    "marker",
+    [
+        "Припев (2 раза):",
+        "[Припев]",
+        "[Припев]:",
+        "Припев.",
+        "ПРИПЕВ( Уматурман):",
+        "Припев (2 раза).",
+    ],
+)
+def test_chorus_marker_variants_are_dropped(marker: str) -> None:
+    assert clean_text(f"строка\n{marker}\nещё строка") == "строка\nещё строка"
+
+
+def test_lyrics_mentioning_a_chorus_are_kept() -> None:
+    line = "Мы споём этот припев вдвоём"
+    assert clean_text(line) == line

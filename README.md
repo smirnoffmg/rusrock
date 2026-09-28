@@ -22,6 +22,10 @@
 
 ![Матрица ошибок](figures/confusion.png)
 
+**Незнакомый автор.** Модель с закрытым списком всегда называет кого-то из известных. Порог «никто из известных» (`rusrock.openset`) подобран на данных, где ответ известен: песни каждого автора, исключённого из обучения, против перекрёстной проверки на известных. Порог 0,207 разделяет плохо (сбалансированная точность 0,64): максимальная вероятность закрытой модели — слабый признак незнакомого автора.
+
+**Расширенный корпус.** Uma2rman (слова Владимира Кристовского) собирается отдельно, `build --extended` → `data/extended/`, для проверки переноса стиля на отложенном тексте (`rusrock.transfer`); в основные результаты не входит. На 33 песнях модель узнаёт автора плохо (F1 0,16), поэтому опыт о переносе стиля ничего не показал.
+
 ## Данные
 
 Тексты песен защищены авторским правом и в репозитории отсутствуют (`data/` в `.gitignore`). Их можно собрать заново разборщиками из `src/rusrock/sites/`: они кэшируют страницы, выдерживают паузу между запросами, представляются своим User-Agent и соблюдают `robots.txt`. Сайты, закрытые для автоматических клиентов, не используются; поэтому у «Аукцыона» нет альбома «Сокровище» (2025).
@@ -37,7 +41,7 @@ uv sync
 # 1. сбор текстов (по одному модулю на источник)
 uv run rusrock-scrape gro
 uv run rusrock-scrape nau
-for site in kino aquarium ddt alisa zoopark yanka piknik bashlachev delfin splin auktyon; do
+for site in kino aquarium ddt alisa zoopark yanka piknik bashlachev delfin splin auktyon uma2rman; do
   uv run python -m rusrock.sites.$site
 done
 # 2. корпус, разметка, словари, характерные слова
@@ -50,6 +54,11 @@ uv run python -m rusrock.richness
 uv run python -m rusrock.unique
 uv run python -m rusrock.attribution
 uv run python -m rusrock.figures
+uv run python -W ignore -m rusrock.openset
+# 4. расширенный корпус (вне основных результатов)
+uv run python -m rusrock.build --extended
+uv run python -W ignore -m rusrock.preprocess data/extended/corpus.jsonl
+uv run python -W ignore -m rusrock.transfer <файл с текстом> "Владимир Кристовский"
 ```
 
 Разборщик Башлачёва читает книгу «Как по лезвию» (М.: Время, 2006) в EPUB; путь задан константой в `src/rusrock/sites/bashlachev.py`.

@@ -32,6 +32,7 @@ SHORT = {
     "Андрей Лысиков": "Дельфин",
     "Александр Васильев": "Васильев",
     "Дмитрий Озерский": "Озерский",
+    "Владимир Кристовский": "Кристовский",
 }
 RICH = {"Янка Дягилева", "Александр Башлачёв", "Юрий Шевчук", "Егор Летов"}
 MODEL_NAMES = {
@@ -114,7 +115,7 @@ def richness() -> None:
 
 def keyness() -> None:
     skip = function_lemmas()
-    authors = list(SHORT)
+    authors = [a for a in SHORT if (DATA / "keyness" / f"{a}.tsv").exists()]
     fig, axes = plt.subplots(3, 5, figsize=(15, 9.5), sharex=True)
     for ax in axes.flat[len(authors) :]:
         ax.set_visible(False)
@@ -181,7 +182,7 @@ def confusion() -> None:
     table = read_tsv(DATA / "attribution" / "confusion_lr_char_plus_lemmas.tsv").set_index(
         "true\\pred"
     )
-    order = list(SHORT)
+    order = [a for a in SHORT if a in table.index]
     table = table.loc[order, order]
     shares = table.div(table.sum(axis=1), axis=0) * 100
     shares.index = [SHORT[a] for a in order]

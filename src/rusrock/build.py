@@ -99,6 +99,10 @@ ARTISTS = (
     Artist("auktyon", "Дмитрий Озерский", "Озерский", True),
 )
 
+# Outside the rock core: built only with --extended into data/extended/, for the style-transfer
+# check on «Липкий пульс» (held out of the scraper).
+EXTRA_ARTISTS = (Artist("uma2rman", "Владимир Кристовский", "Кристовский", True),)
+
 KIND_RANK = {"studio": 0, "solo": 1, "single": 2, "live": 3, "compilation": 4, "other": 5}
 
 
@@ -203,12 +207,14 @@ def load_songs(path: Path) -> list[Song]:
 
 
 def main() -> None:
+    extended = "--extended" in sys.argv[1:]
     data, meta = Path("data"), Path("meta")
     corpus = []
-    for artist in ARTISTS:
+    for artist in ARTISTS + EXTRA_ARTISTS if extended else ARTISTS:
         songs = load_songs(data / "songs" / f"{artist.key}.jsonl")
         corpus.extend(build_artist(artist, songs, meta))
-    out = data / "corpus.jsonl"
+    out = data / "extended" / "corpus.jsonl" if extended else data / "corpus.jsonl"
+    out.parent.mkdir(parents=True, exist_ok=True)
     with out.open("w", encoding="utf-8") as f:
         for song in corpus:
             f.write(json.dumps(asdict(song), ensure_ascii=False) + "\n")

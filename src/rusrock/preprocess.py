@@ -6,7 +6,8 @@ from pathlib import Path
 from typing import Any
 
 MARKER_LINE = re.compile(
-    r"^(припев|проигрыш|куплет|соло|кода)\s*\d*\s*:?\s*(\*\s*\d+)?\s*$", re.IGNORECASE
+    r"^\[?(припев|проигрыш|куплет|соло|кода)\]?\s*\d*\s*(\([^)]*\))?\s*[:.]?\s*(\*\s*\d+)?\s*$",
+    re.IGNORECASE,
 )
 MARKER_PREFIX = re.compile(r"^припев\s*\d*\s*:\s*", re.IGNORECASE)
 SPEAKER_PREFIX = re.compile(r"^(майк|боб|бг|б\.\s?г\.)\s*:\s*", re.IGNORECASE)
@@ -114,27 +115,58 @@ class TokenizedSong:
     lemmas_pymorphy: list[str]
 
 
+@dataclass(frozen=True)
+class Analysis:
+    forms: list[str]
+    pos: list[str]
+    lemmas: list[str]
+    lemmas_natasha: list[str]
+    lemmas_pymorphy: list[str]
+
+
+class Analyzer:
+    """Natasha and pymorphy3 loaded once; `__call__` tokenizes and lemmatizes one text."""
+
+    def __init__(self) -> None:
+        import pymorphy3
+        from natasha import MorphVocab, NewsEmbedding, NewsMorphTagger, Segmenter
+
+        self.segmenter, self.vocab = Segmenter(), MorphVocab()
+        self.tagger = NewsMorphTagger(NewsEmbedding())
+        self.morph = pymorphy3.MorphAnalyzer()
+
+    def __call__(self, text: str) -> Analysis:
+        from natasha import Doc
+
+        doc = Doc(lower_line_initials(clean_text(text), self.morph))
+        doc.segment(self.segmenter)
+        doc.tag_morph(self.tagger)
+        words = [t for t in doc.tokens if is_word(t.text)]
+        for token in words:
+            token.lemmatize(self.vocab)
+        forms = [t.text.lower() for t in words]
+        parses = [self.morph.parse(form) for form in forms]
+        return Analysis(
+            forms=forms,
+            pos=[t.pos for t in words],
+            lemmas=[
+                combine_lemma(normalize_lemma(f), t.lemma, t.pos, p)
+                for f, t, p in zip(forms, words, parses, strict=True)
+            ],
+            lemmas_natasha=[normalize_lemma(t.lemma) for t in words],
+            lemmas_pymorphy=[normalize_lemma(p[0].normal_form) for p in parses],
+        )
+
+
 def main() -> None:
-    import pymorphy3
-    from natasha import Doc, MorphVocab, NewsEmbedding, NewsMorphTagger, Segmenter
-
-    segmenter, vocab = Segmenter(), MorphVocab()
-    tagger = NewsMorphTagger(NewsEmbedding())
-    analyzer = pymorphy3.MorphAnalyzer()
-
-    corpus = Path("data/corpus.jsonl")
-    out = Path("data/tokens.jsonl")
+    analyze = Analyzer()
+    args = sys.argv[1:]
+    corpus = Path(args[0]) if args else Path("data/corpus.jsonl")
+    out = Path(args[1]) if len(args) > 1 else corpus.with_name("tokens.jsonl")
     with corpus.open(encoding="utf-8") as src, out.open("w", encoding="utf-8") as dst:
         for number, line in enumerate(src, 1):
             song = json.loads(line)
-            doc = Doc(lower_line_initials(clean_text(song["text"]), analyzer))
-            doc.segment(segmenter)
-            doc.tag_morph(tagger)
-            words = [t for t in doc.tokens if is_word(t.text)]
-            for token in words:
-                token.lemmatize(vocab)
-            forms = [t.text.lower() for t in words]
-            parses = [analyzer.parse(form) for form in forms]
+            analysis = analyze(song["text"])
             tokenized = TokenizedSong(
                 author=song["author"],
                 artist=song["artist"],
@@ -142,14 +174,7 @@ def main() -> None:
                 group=song["group"],
                 genre=song["genre"],
                 year=song["year"],
-                forms=forms,
-                pos=[t.pos for t in words],
-                lemmas=[
-                    combine_lemma(normalize_lemma(f), t.lemma, t.pos, p)
-                    for f, t, p in zip(forms, words, parses, strict=True)
-                ],
-                lemmas_natasha=[normalize_lemma(t.lemma) for t in words],
-                lemmas_pymorphy=[normalize_lemma(p[0].normal_form) for p in parses],
+                **asdict(analysis),
             )
             dst.write(json.dumps(asdict(tokenized), ensure_ascii=False) + "\n")
             if number % 200 == 0:
